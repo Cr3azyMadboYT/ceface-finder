@@ -7,7 +7,7 @@ import PullToRefresh from '@/components/PullToRefresh';
 import { Plus, Edit2, Trash2, Eye, EyeOff, X, Upload, Image } from 'lucide-react';
 
 const EMPTY_OFFER = {
-  title: '', description: '', category: CATEGORIES[0], city: CITIES[0], area: '',
+  title: '', description: '', category: CATEGORIES[0] as string, city: CITIES[0] as string, area: '',
   location: '', location_url: '', date: '', time: '', image_url: '', contact_link: '',
   phone: '', is_active: true,
 };
