@@ -50,10 +50,10 @@ const OfferDetails = () => {
 
   const openContact = () => {
     if (!offer) return;
-    if (offer.contact_link) {
+    if (offer.phone) {
+      window.location.href = `tel:${offer.phone}`;
+    } else if (offer.contact_link) {
       window.open(offer.contact_link, '_blank');
-    } else if (offer.phone) {
-      window.open(`tel:${offer.phone}`, '_self');
     }
   };
 
