@@ -78,8 +78,8 @@ const Admin = () => {
 
   const startEdit = (offer: Offer) => {
     setForm({
-      title: offer.title || '', description: offer.description || '', category: offer.category || CATEGORIES[0],
-      city: offer.city || CITIES[0], area: offer.area || '', location: offer.location || '',
+      title: offer.title || '', description: offer.description || '', category: (offer.category || CATEGORIES[0]) as string,
+      city: (offer.city || CITIES[0]) as string, area: offer.area || '', location: offer.location || '',
       location_url: offer.location_url || '', date: offer.date || '', time: offer.time || '',
       image_url: offer.image_url || '', contact_link: offer.contact_link || '', phone: offer.phone || '',
       is_active: offer.is_active,
