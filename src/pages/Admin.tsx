@@ -120,7 +120,7 @@ const Admin = () => {
   const labelClass = "text-xs font-medium text-muted-foreground mb-1 block";
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background safe-pb">
       <PullToRefresh onRefresh={fetchOffers}>
         <div className="px-4 pt-6 pb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold font-heading text-foreground">{t.admin}</h1>

@@ -54,6 +54,10 @@
     @apply border-border;
   }
 
+  html {
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
@@ -99,5 +103,9 @@
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .safe-pb {
+    padding-bottom: calc(4rem + var(--safe-area-bottom, 0px));
   }
 }
