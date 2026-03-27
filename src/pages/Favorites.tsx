@@ -35,7 +35,7 @@ const Favorites = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background safe-pb">
       <PullToRefresh onRefresh={fetchFavorites}>
         <div className="px-4 pt-6 pb-4">
           <h1 className="text-2xl font-bold font-heading text-foreground">{t.favorites}</h1>

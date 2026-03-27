@@ -19,7 +19,8 @@ const BottomNav = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div className="flex items-center justify-around py-2 px-2 max-w-lg mx-auto">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink

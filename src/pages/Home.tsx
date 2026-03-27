@@ -71,7 +71,7 @@ const Home = () => {
   }) : [];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background safe-pb">
       <PullToRefresh onRefresh={handleRefresh}>
         {/* Header */}
         <div className="px-4 pt-6 pb-2">

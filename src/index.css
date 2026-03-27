@@ -104,4 +104,8 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .safe-pb {
+    padding-bottom: calc(4rem + var(--safe-area-bottom, 0px));
+  }
 }
