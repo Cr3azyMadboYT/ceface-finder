@@ -54,6 +54,10 @@
     @apply border-border;
   }
 
+  html {
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
