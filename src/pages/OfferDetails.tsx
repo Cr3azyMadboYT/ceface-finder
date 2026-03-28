@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Offer, translations } from '@/types';
-import { ArrowLeft, MapPin, Calendar, Clock, Heart, ExternalLink, Phone } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
+import { ArrowLeft, MapPin, Calendar, Clock, Heart, ExternalLink, Phone, Navigation } from 'lucide-react';
 
 const OfferDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +18,10 @@ const OfferDetails = () => {
   useEffect(() => {
     const fetchOffer = async () => {
       const { data } = await supabase.from('offers').select('*').eq('id', id).single();
-      if (data) setOffer(data);
+      if (data) {
+        setOffer(data);
+        trackEvent(data.id, 'view', user?.id);
+      }
       setLoading(false);
     };
     const checkFav = async () => {
@@ -31,6 +35,7 @@ const OfferDetails = () => {
 
   const toggleFavorite = async () => {
     if (!user || !offer) return;
+    trackEvent(offer.id, 'favorite', user.id);
     if (isFavorite) {
       await supabase.from('favorites').delete().eq('user_id', user.id).eq('offer_id', offer.id);
     } else {
@@ -41,6 +46,7 @@ const OfferDetails = () => {
 
   const openLocation = () => {
     if (!offer) return;
+    trackEvent(offer.id, 'open_map', user?.id);
     let url = offer.location_url;
     if (!url && offer.location) {
       url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(offer.location)}`;
@@ -76,6 +82,7 @@ const OfferDetails = () => {
 
   const hasLocation = !!(offer.location_url || offer.location);
   const hasContact = !!(offer.contact_link || offer.phone);
+  const isPromo = offer.is_promoted && (!offer.promotion_expires_at || new Date(offer.promotion_expires_at) > new Date());
 
   return (
     <div className="min-h-screen bg-background">
@@ -92,6 +99,11 @@ const OfferDetails = () => {
           className="absolute top-4 left-4 w-10 h-10 rounded-full glass flex items-center justify-center">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
+        {isPromo && (
+          <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-bold backdrop-blur-sm">
+            🔥 PROMO
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -117,31 +129,33 @@ const OfferDetails = () => {
           <p className="text-foreground/80 leading-relaxed">{offer.description}</p>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-2">
-          {hasLocation && (
-            <button onClick={openLocation}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-primary text-primary-foreground font-semibold shadow-neon">
-              <MapPin className="w-5 h-5" />{t.seeLocation}
-            </button>
-          )}
+        {/* "Merg acum" big button */}
+        {hasLocation && (
+          <button onClick={openLocation}
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-primary text-primary-foreground font-bold text-lg shadow-neon-strong">
+            <Navigation className="w-6 h-6" /> {t.goNow}
+          </button>
+        )}
+
+        {/* Secondary actions */}
+        <div className="flex gap-3">
           {user && (
             <button onClick={toggleFavorite}
-              className={`px-4 py-3 rounded-xl border font-semibold transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border font-semibold transition-all ${
                 isFavorite ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'
               }`}>
               <Heart className={`w-5 h-5 ${isFavorite ? 'fill-primary' : ''}`} />
+              {isFavorite ? t.saved : t.save}
+            </button>
+          )}
+          {hasContact && (
+            <button onClick={openContact}
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-foreground font-semibold hover:bg-card transition-all">
+              {offer.phone ? <Phone className="w-5 h-5" /> : <ExternalLink className="w-5 h-5" />}
+              {t.contact}
             </button>
           )}
         </div>
-
-        {hasContact && (
-          <button onClick={openContact}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-foreground font-semibold hover:bg-card transition-all">
-            {offer.phone ? <Phone className="w-5 h-5" /> : <ExternalLink className="w-5 h-5" />}
-            {t.contact}
-          </button>
-        )}
       </div>
     </div>
   );

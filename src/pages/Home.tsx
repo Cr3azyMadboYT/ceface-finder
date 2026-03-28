@@ -21,6 +21,8 @@ const Home = () => {
       .from('offers')
       .select('*')
       .eq('is_active', true)
+      .order('is_promoted', { ascending: false })
+      .order('promotion_priority', { ascending: false })
       .order('created_at', { ascending: false });
     if (data) setOffers(data);
     setLoading(false);
@@ -58,13 +60,22 @@ const Home = () => {
     return matchSearch && matchCat;
   });
 
+  // Separate promoted and regular offers
+  const now = new Date();
+  const promoted = filtered.filter(o =>
+    o.is_promoted && (!o.promotion_expires_at || new Date(o.promotion_expires_at) > now)
+  );
+  const regular = filtered.filter(o =>
+    !o.is_promoted || (o.promotion_expires_at && new Date(o.promotion_expires_at) <= now)
+  );
+
   const today = new Date().toISOString().split('T')[0];
   const dayOfWeek = new Date().getDay();
   const isWeekendSoon = dayOfWeek >= 4;
 
-  const popular = filtered.slice(0, 6);
-  const tonight = filtered.filter(o => o.date === today);
-  const weekend = isWeekendSoon ? filtered.filter(o => {
+  const popular = regular.slice(0, 6);
+  const tonight = regular.filter(o => o.date === today);
+  const weekend = isWeekendSoon ? regular.filter(o => {
     if (!o.date) return false;
     const d = new Date(o.date).getDay();
     return d === 0 || d === 5 || d === 6;
@@ -121,6 +132,18 @@ const Home = () => {
           </div>
         ) : (
           <div className="space-y-6 px-4">
+            {/* 🔥 Recommended / Promoted */}
+            {promoted.length > 0 && (
+              <section>
+                <h2 className="text-lg font-bold font-heading text-foreground mb-3">{t.recommended}</h2>
+                <div className="space-y-3">
+                  {promoted.map(o => (
+                    <OfferCard key={o.id} offer={o} isFavorite={favorites.has(o.id)} onToggleFavorite={() => toggleFavorite(o.id)} compact />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Popular */}
             {popular.length > 0 && (
               <section>
@@ -157,12 +180,12 @@ const Home = () => {
               </section>
             )}
 
-            {/* All offers */}
-            {filtered.length > 0 && popular.length < filtered.length && (
+            {/* All remaining */}
+            {regular.length > 6 && (
               <section>
                 <h2 className="text-lg font-bold font-heading text-foreground mb-3">{t.nearby}</h2>
                 <div className="space-y-3">
-                  {filtered.slice(6).map(o => (
+                  {regular.slice(6).map(o => (
                     <OfferCard key={o.id} offer={o} isFavorite={favorites.has(o.id)} onToggleFavorite={() => toggleFavorite(o.id)} compact />
                   ))}
                 </div>

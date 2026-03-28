@@ -23,12 +23,35 @@ export interface Offer {
   is_active: boolean;
   created_by: string;
   created_at: string;
+  // Promotion fields
+  is_promoted: boolean;
+  promotion_starts_at: string | null;
+  promotion_expires_at: string | null;
+  promotion_priority: number;
+  promotion_push_sent: boolean;
 }
 
 export interface Favorite {
   id: string;
   user_id: string;
   offer_id: string;
+  created_at: string;
+}
+
+export interface OfferEvent {
+  id: string;
+  offer_id: string;
+  user_id: string | null;
+  event_type: 'view' | 'click' | 'open_map' | 'favorite';
+  created_at: string;
+}
+
+export interface PushLog {
+  id: string;
+  offer_id: string | null;
+  title: string;
+  body: string;
+  sent_count: number;
   created_at: string;
 }
 
@@ -48,7 +71,9 @@ export const translations = {
     nearby: 'În apropiere',
     tonight: 'Diseară',
     weekend: 'Weekend',
+    recommended: '🔥 Oferte recomandate',
     seeLocation: 'Vezi locația',
+    goNow: '🗺️ Merg acum',
     save: 'Salvează',
     saved: 'Salvat',
     contact: 'Contactează',
@@ -91,6 +116,14 @@ export const translations = {
     back: 'Înapoi',
     confirmEmail: 'Verifică-ți email-ul pentru confirmare',
     allCategories: 'Toate',
+    promote: 'Promovează',
+    removePromo: 'Scoate promo',
+    sendPush: 'Trimite push',
+    promoted: 'PROMO',
+    totalOffers: 'Total oferte',
+    activePromos: 'Promoții active',
+    viewsToday: 'Views azi',
+    clicksToday: 'Clickuri azi',
   },
   en: {
     home: 'Home',
@@ -102,7 +135,9 @@ export const translations = {
     nearby: 'Nearby',
     tonight: 'Tonight',
     weekend: 'Weekend',
+    recommended: '🔥 Recommended offers',
     seeLocation: 'See location',
+    goNow: '🗺️ Go now',
     save: 'Save',
     saved: 'Saved',
     contact: 'Contact',
@@ -145,5 +180,13 @@ export const translations = {
     back: 'Back',
     confirmEmail: 'Check your email to confirm',
     allCategories: 'All',
+    promote: 'Promote',
+    removePromo: 'Remove promo',
+    sendPush: 'Send push',
+    promoted: 'PROMO',
+    totalOffers: 'Total offers',
+    activePromos: 'Active promos',
+    viewsToday: 'Views today',
+    clicksToday: 'Clicks today',
   },
 };
