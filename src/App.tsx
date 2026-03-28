@@ -14,6 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import Admin from "./pages/Admin";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
+import DeepLinkHandler from "./components/DeepLinkHandler";
 
 const queryClient = new QueryClient();
 
