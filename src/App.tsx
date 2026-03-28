@@ -12,6 +12,7 @@ import OfferDetails from "./pages/OfferDetails";
 import Favorites from "./pages/Favorites";
 import ProfilePage from "./pages/ProfilePage";
 import Admin from "./pages/Admin";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
