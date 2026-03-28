@@ -14,6 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import Admin from "./pages/Admin";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
+import DeepLinkHandler from "./components/DeepLinkHandler";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
+          <DeepLinkHandler />
           <Routes>
             <Route path="/login" element={<AuthRedirect><Login /></AuthRedirect>} />
             <Route path="/signup" element={<AuthRedirect><Signup /></AuthRedirect>} />
