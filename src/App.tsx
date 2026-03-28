@@ -54,6 +54,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
+          <DeepLinkHandler />
           <Routes>
             <Route path="/login" element={<AuthRedirect><Login /></AuthRedirect>} />
             <Route path="/signup" element={<AuthRedirect><Signup /></AuthRedirect>} />
