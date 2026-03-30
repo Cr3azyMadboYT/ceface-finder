@@ -93,6 +93,13 @@ const AdminOfferForm: React.FC<Props> = ({ editingOffer, onClose, onSaved }) => 
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className={labelClass}>Tip ofertă</label>
+            <select value={form.offer_type} onChange={e => setForm({ ...form, offer_type: e.target.value as OfferType })} className={inputClass}>
+              <option value="event">📅 Eveniment</option>
+              <option value="limited_offer">⏳ Ofertă limitată</option>
+            </select>
+          </div>
           <div><label className={labelClass}>{t.title}</label><input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className={inputClass} required /></div>
           <div><label className={labelClass}>{t.description}</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className={`${inputClass} min-h-[80px] resize-none`} /></div>
 
