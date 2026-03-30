@@ -13,7 +13,7 @@ interface Props {
 const EMPTY_OFFER = {
   title: '', description: '', category: CATEGORIES[0] as string, city: CITIES[0] as string, area: '',
   location: '', location_url: '', date: '', time: '', image_url: '', contact_link: '',
-  phone: '', is_active: true,
+  phone: '', is_active: true, offer_type: 'event' as OfferType,
 };
 
 const AdminOfferForm: React.FC<Props> = ({ editingOffer, onClose, onSaved }) => {
