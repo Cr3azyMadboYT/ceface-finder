@@ -27,6 +27,7 @@ const AdminOfferForm: React.FC<Props> = ({ editingOffer, onClose, onSaved }) => 
     location_url: editingOffer.location_url || '', date: editingOffer.date || '', time: editingOffer.time || '',
     image_url: editingOffer.image_url || '', contact_link: editingOffer.contact_link || '',
     phone: editingOffer.phone || '', is_active: editingOffer.is_active,
+    offer_type: (editingOffer.offer_type || 'event') as OfferType,
   } : EMPTY_OFFER);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
