@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Offer, CATEGORIES, CITIES, translations } from '@/types';
+import { Offer, OfferType, CATEGORIES, CITIES, translations } from '@/types';
 import { X, Upload } from 'lucide-react';
 
 interface Props {

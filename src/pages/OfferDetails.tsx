@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Offer, translations } from '@/types';
 import { trackEvent } from '@/lib/analytics';
-import { ArrowLeft, MapPin, Calendar, Clock, Heart, ExternalLink, Phone, Navigation } from 'lucide-react';
+import { formatOfferDisplay } from '@/lib/offerUtils';
+import { ArrowLeft, MapPin, Calendar, Clock, Heart, ExternalLink, Phone, Navigation, Timer } from 'lucide-react';
 
 const OfferDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,12 +15,14 @@ const OfferDetails = () => {
   const [offer, setOffer] = useState<Offer | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [display, setDisplay] = useState<ReturnType<typeof formatOfferDisplay> | null>(null);
 
   useEffect(() => {
     const fetchOffer = async () => {
       const { data } = await supabase.from('offers').select('*').eq('id', id).single();
       if (data) {
         setOffer(data);
+        setDisplay(formatOfferDisplay(data));
         trackEvent(data.id, 'view', user?.id);
       }
       setLoading(false);
@@ -32,6 +35,13 @@ const OfferDetails = () => {
     fetchOffer();
     checkFav();
   }, [id, user]);
+
+  // Live countdown
+  useEffect(() => {
+    if (!offer || (offer.offer_type || 'event') !== 'limited_offer') return;
+    const iv = setInterval(() => setDisplay(formatOfferDisplay(offer)), 30_000);
+    return () => clearInterval(iv);
+  }, [offer]);
 
   const toggleFavorite = async () => {
     if (!user || !offer) return;
@@ -83,13 +93,14 @@ const OfferDetails = () => {
   const hasLocation = !!(offer.location_url || offer.location);
   const hasContact = !!(offer.contact_link || offer.phone);
   const isPromo = offer.is_promoted && (!offer.promotion_expires_at || new Date(offer.promotion_expires_at) > new Date());
+  const isLimited = (offer.offer_type || 'event') === 'limited_offer';
 
   return (
     <div className="min-h-screen bg-background">
       {/* Image */}
       <div className="relative">
         {offer.image_url ? (
-          <img src={offer.image_url} alt={offer.title} className="w-full aspect-[16/10] object-cover" />
+          <img src={offer.image_url} alt={offer.title} className={`w-full aspect-[16/10] object-cover ${display?.isExpired ? 'opacity-50 grayscale' : ''}`} />
         ) : (
           <div className="w-full aspect-[16/10] bg-card flex items-center justify-center">
             <span className="text-muted-foreground text-4xl">📍</span>
@@ -110,8 +121,22 @@ const OfferDetails = () => {
       <div className="px-4 py-5 space-y-4 animate-slide-up">
         <div>
           <span className="text-xs uppercase tracking-wider text-primary font-semibold">{offer.category}</span>
-          <h1 className="text-2xl font-bold font-heading text-foreground mt-1">{offer.title}</h1>
+          <h1 className={`text-2xl font-bold font-heading mt-1 ${display?.isExpired ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{offer.title}</h1>
         </div>
+
+        {/* Limited offer countdown banner */}
+        {isLimited && display?.label && (
+          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold ${
+            display.isExpired
+              ? 'bg-muted text-muted-foreground'
+              : display.isUrgent
+                ? 'bg-destructive/10 text-destructive border border-destructive/20'
+                : 'bg-accent/10 text-accent-foreground border border-accent/20'
+          }`}>
+            <Timer className="w-4 h-4 flex-shrink-0" />
+            {display.label}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
           {offer.location && (
@@ -129,8 +154,8 @@ const OfferDetails = () => {
           <p className="text-foreground/80 leading-relaxed">{offer.description}</p>
         )}
 
-        {/* "Merg acum" big button */}
-        {hasLocation && (
+        {/* "Merg acum" big button — hide if expired */}
+        {hasLocation && !display?.isExpired && (
           <button onClick={openLocation}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-primary text-primary-foreground font-bold text-lg shadow-neon-strong">
             <Navigation className="w-6 h-6" /> {t.goNow}
