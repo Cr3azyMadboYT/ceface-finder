@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Offer, CATEGORIES, CITIES, translations } from '@/types';
+import { Offer, OfferType, CATEGORIES, CITIES, translations } from '@/types';
 import { X, Upload } from 'lucide-react';
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 const EMPTY_OFFER = {
   title: '', description: '', category: CATEGORIES[0] as string, city: CITIES[0] as string, area: '',
   location: '', location_url: '', date: '', time: '', image_url: '', contact_link: '',
-  phone: '', is_active: true,
+  phone: '', is_active: true, offer_type: 'event' as OfferType,
 };
 
 const AdminOfferForm: React.FC<Props> = ({ editingOffer, onClose, onSaved }) => {
@@ -27,6 +27,7 @@ const AdminOfferForm: React.FC<Props> = ({ editingOffer, onClose, onSaved }) => 
     location_url: editingOffer.location_url || '', date: editingOffer.date || '', time: editingOffer.time || '',
     image_url: editingOffer.image_url || '', contact_link: editingOffer.contact_link || '',
     phone: editingOffer.phone || '', is_active: editingOffer.is_active,
+    offer_type: (editingOffer.offer_type || 'event') as OfferType,
   } : EMPTY_OFFER);
 
   const [imageFile, setImageFile] = useState<File | null>(null);

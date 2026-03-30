@@ -6,6 +6,8 @@ export interface Profile {
   created_at: string;
 }
 
+export type OfferType = 'event' | 'limited_offer';
+
 export interface Offer {
   id: string;
   title: string;
@@ -23,6 +25,7 @@ export interface Offer {
   is_active: boolean;
   created_by: string;
   created_at: string;
+  offer_type: OfferType;
   // Promotion fields
   is_promoted: boolean;
   promotion_starts_at: string | null;
