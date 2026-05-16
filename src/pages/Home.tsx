@@ -17,6 +17,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchOffers = useCallback(async () => {
+    try { await supabase.rpc('expire_offers'); } catch { /* noop */ }
     const { data } = await supabase
       .from('offers')
       .select('*')
