@@ -5,35 +5,52 @@ import { translations, PushLog } from '@/types';
 import { BarChart3, TrendingUp, Eye, MousePointerClick, Megaphone, Bell } from 'lucide-react';
 
 interface DashboardStats {
-  totalOffers: number;
-  activePromos: number;
+  totalUsers: number;
+  totalBusinesses: number;
+  pendingBusinesses: number;
+  activeOffers: number;
+  pendingOffers: number;
   viewsToday: number;
   clicksToday: number;
+  estimatedRevenue: number;
 }
 
 const AdminDashboard: React.FC = () => {
   const { language } = useAuth();
   const t = translations[language];
-  const [stats, setStats] = useState<DashboardStats>({ totalOffers: 0, activePromos: 0, viewsToday: 0, clicksToday: 0 });
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0, totalBusinesses: 0, pendingBusinesses: 0,
+    activeOffers: 0, pendingOffers: 0, viewsToday: 0, clicksToday: 0, estimatedRevenue: 0,
+  });
   const [recentPushes, setRecentPushes] = useState<PushLog[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
       const today = new Date().toISOString().split('T')[0];
 
-      const [offersRes, promosRes, viewsRes, clicksRes, pushRes] = await Promise.all([
-        supabase.from('offers').select('id', { count: 'exact', head: true }),
-        supabase.from('offers').select('id', { count: 'exact', head: true }).eq('is_promoted', true).gte('promotion_expires_at', new Date().toISOString()),
+      const [usersRes, bizRes, pendingBizRes, activeRes, pendingOfRes, viewsRes, clicksRes, pushRes, subsRes] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('businesses').select('id', { count: 'exact', head: true }),
+        supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('is_approved', false),
+        supabase.from('offers').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        supabase.from('offers').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('offer_events').select('id', { count: 'exact', head: true }).eq('event_type', 'view').gte('created_at', today),
         supabase.from('offer_events').select('id', { count: 'exact', head: true }).eq('event_type', 'click').gte('created_at', today),
         supabase.from('push_logs').select('*').order('created_at', { ascending: false }).limit(5),
+        supabase.from('subscriptions').select('price').eq('status', 'active'),
       ]);
 
+      const revenue = (subsRes.data || []).reduce((s: number, r: { price?: number | null }) => s + (Number(r.price) || 0), 0);
+
       setStats({
-        totalOffers: offersRes.count || 0,
-        activePromos: promosRes.count || 0,
+        totalUsers: usersRes.count || 0,
+        totalBusinesses: bizRes.count || 0,
+        pendingBusinesses: pendingBizRes.count || 0,
+        activeOffers: activeRes.count || 0,
+        pendingOffers: pendingOfRes.count || 0,
         viewsToday: viewsRes.count || 0,
         clicksToday: clicksRes.count || 0,
+        estimatedRevenue: revenue,
       });
       if (pushRes.data) setRecentPushes(pushRes.data);
     };
@@ -42,10 +59,14 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   const statCards = [
-    { label: t.totalOffers, value: stats.totalOffers, icon: BarChart3, color: 'text-primary' },
-    { label: t.activePromos, value: stats.activePromos, icon: Megaphone, color: 'text-accent' },
+    { label: 'Utilizatori', value: stats.totalUsers, icon: BarChart3, color: 'text-primary' },
+    { label: 'Business-uri', value: stats.totalBusinesses, icon: Megaphone, color: 'text-accent' },
+    { label: 'Pending business', value: stats.pendingBusinesses, icon: Megaphone, color: 'text-accent' },
+    { label: 'Oferte active', value: stats.activeOffers, icon: BarChart3, color: 'text-primary' },
+    { label: 'Oferte pending', value: stats.pendingOffers, icon: BarChart3, color: 'text-accent' },
     { label: t.viewsToday, value: stats.viewsToday, icon: Eye, color: 'text-accent' },
     { label: t.clicksToday, value: stats.clicksToday, icon: MousePointerClick, color: 'text-primary' },
+    { label: 'Venit estimat (lei/lună)', value: stats.estimatedRevenue, icon: Megaphone, color: 'text-primary' },
   ];
 
   return (

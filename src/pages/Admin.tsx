@@ -7,7 +7,11 @@ import PullToRefresh from '@/components/PullToRefresh';
 import AdminDashboard from '@/components/AdminDashboard';
 import AdminOfferList from '@/components/AdminOfferList';
 import AdminOfferForm from '@/components/AdminOfferForm';
-import { Plus, BarChart3, List } from 'lucide-react';
+import BusinessModeration from '@/components/admin/BusinessModeration';
+import OfferModeration from '@/components/admin/OfferModeration';
+import { Plus, BarChart3, List, Store, ClipboardCheck } from 'lucide-react';
+
+type Tab = 'dashboard' | 'offers' | 'pending_offers' | 'businesses';
 
 const Admin = () => {
   const { language } = useAuth();
@@ -16,7 +20,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'offers'>('dashboard');
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
 
   const fetchOffers = useCallback(async () => {
     const { data } = await supabase.from('offers').select('*').order('created_at', { ascending: false });
@@ -26,21 +30,16 @@ const Admin = () => {
 
   useEffect(() => { fetchOffers(); }, [fetchOffers]);
 
-  const openCreate = () => {
-    setEditingOffer(null);
-    setShowForm(true);
-  };
+  const openCreate = () => { setEditingOffer(null); setShowForm(true); };
+  const openEdit = (offer: Offer) => { setEditingOffer(offer); setShowForm(true); };
+  const handleSaved = () => { setShowForm(false); setEditingOffer(null); fetchOffers(); };
 
-  const openEdit = (offer: Offer) => {
-    setEditingOffer(offer);
-    setShowForm(true);
-  };
-
-  const handleSaved = () => {
-    setShowForm(false);
-    setEditingOffer(null);
-    fetchOffers();
-  };
+  const tabs: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'pending_offers', label: 'Oferte pending', icon: ClipboardCheck },
+    { id: 'businesses', label: 'Business-uri', icon: Store },
+    { id: 'offers', label: `Toate (${offers.length})`, icon: List },
+  ];
 
   return (
     <div className="min-h-screen bg-background safe-pb">
@@ -53,25 +52,16 @@ const Admin = () => {
           </button>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="px-4 mb-4">
-          <div className="flex gap-2 p-1 rounded-xl bg-card border border-border">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'dashboard' ? 'bg-gradient-primary text-primary-foreground shadow-neon' : 'text-muted-foreground'
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" /> Dashboard
-            </button>
-            <button
-              onClick={() => setActiveTab('offers')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'offers' ? 'bg-gradient-primary text-primary-foreground shadow-neon' : 'text-muted-foreground'
-              }`}
-            >
-              <List className="w-4 h-4" /> Oferte ({offers.length})
-            </button>
+        <div className="px-4 mb-4 overflow-x-auto hide-scrollbar">
+          <div className="flex gap-2 p-1 rounded-xl bg-card border border-border min-w-max">
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setActiveTab(t.id)}
+                className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  activeTab === t.id ? 'bg-gradient-primary text-primary-foreground shadow-neon' : 'text-muted-foreground'
+                }`}>
+                <t.icon className="w-4 h-4" /> {t.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -81,11 +71,10 @@ const Admin = () => {
           </div>
         ) : (
           <div className="px-4">
-            {activeTab === 'dashboard' ? (
-              <AdminDashboard />
-            ) : (
-              <AdminOfferList offers={offers} onEdit={openEdit} onRefresh={fetchOffers} />
-            )}
+            {activeTab === 'dashboard' && <AdminDashboard />}
+            {activeTab === 'pending_offers' && <OfferModeration />}
+            {activeTab === 'businesses' && <BusinessModeration />}
+            {activeTab === 'offers' && <AdminOfferList offers={offers} onEdit={openEdit} onRefresh={fetchOffers} />}
           </div>
         )}
         <div className="h-8" />
