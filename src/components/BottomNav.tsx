@@ -1,17 +1,18 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Heart, User, Shield } from 'lucide-react';
+import { Home, Heart, User, Shield, Store } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { translations } from '@/types';
 
 const BottomNav = () => {
-  const { isAdmin, language } = useAuth();
+  const { isAdmin, isBusiness, language } = useAuth();
   const t = translations[language];
   const location = useLocation();
 
   const navItems = [
     { to: '/', icon: Home, label: t.home },
     { to: '/favorites', icon: Heart, label: t.favorites },
+    ...(isBusiness ? [{ to: '/business', icon: Store, label: t.business }] : []),
     ...(isAdmin ? [{ to: '/admin', icon: Shield, label: t.admin }] : []),
     { to: '/profile', icon: User, label: t.profile },
   ];

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Offer, translations } from '@/types';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, trackCall } from '@/lib/analytics';
 import { formatOfferDisplay } from '@/lib/offerUtils';
 import { ArrowLeft, MapPin, Calendar, Clock, Heart, ExternalLink, Phone, Navigation, Timer } from 'lucide-react';
 
@@ -67,6 +67,7 @@ const OfferDetails = () => {
   const openContact = () => {
     if (!offer) return;
     if (offer.phone) {
+      trackCall(offer.id);
       window.location.href = `tel:${offer.phone}`;
     } else if (offer.contact_link) {
       window.open(offer.contact_link, '_blank');

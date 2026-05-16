@@ -1,12 +1,22 @@
+export type Role = 'admin' | 'business' | 'client' | 'user';
+
 export interface Profile {
   id: string;
   email: string;
-  role: 'admin' | 'user';
+  role: Role;
   language: 'ro' | 'en';
+  name?: string | null;
+  phone?: string | null;
+  city?: string | null;
+  zone?: string | null;
+  fcm_token?: string | null;
+  account_type_chosen?: boolean | null;
   created_at: string;
 }
 
 export type OfferType = 'event' | 'limited_offer';
+export type OfferStatus = 'draft' | 'pending' | 'active' | 'rejected' | 'expired';
+export type TargetType = 'all' | 'city' | 'zone' | 'followers' | 'category';
 
 export interface Offer {
   id: string;
@@ -26,12 +36,101 @@ export interface Offer {
   created_by: string;
   created_at: string;
   offer_type: OfferType;
-  // Promotion fields
+  // Promotion
   is_promoted: boolean;
   promotion_starts_at: string | null;
   promotion_expires_at: string | null;
   promotion_priority: number;
   promotion_push_sent: boolean;
+  // Business
+  business_id?: string | null;
+  old_price?: number | null;
+  new_price?: number | null;
+  discount_percent?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  target_type?: TargetType | null;
+  target_city?: string | null;
+  target_zone?: string | null;
+  target_radius_km?: number | null;
+  status?: OfferStatus | null;
+  rejection_reason?: string | null;
+  terms?: string | null;
+}
+
+export interface Business {
+  id: string;
+  owner_id: string;
+  business_name: string;
+  category: string | null;
+  description: string | null;
+  phone: string | null;
+  email: string | null;
+  city: string | null;
+  zone: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  logo_url: string | null;
+  cover_image_url: string | null;
+  opening_hours: Record<string, string> | null;
+  website: string | null;
+  social_links: Record<string, string> | null;
+  is_approved: boolean;
+  is_verified: boolean;
+  subscription_plan: 'free' | 'basic' | 'pro' | 'premium';
+  subscription_status: 'active' | 'expired' | 'cancelled' | 'pending';
+  subscription_expires_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Subscription {
+  id: string;
+  business_id: string;
+  plan: 'free' | 'basic' | 'pro' | 'premium';
+  status: 'active' | 'expired' | 'cancelled' | 'pending';
+  price: number;
+  started_at: string | null;
+  expires_at: string | null;
+  payment_provider: string | null;
+  payment_id: string | null;
+  created_at: string;
+}
+
+export interface BusinessFollower {
+  id: string;
+  user_id: string;
+  business_id: string;
+  created_at: string;
+}
+
+export interface AppNotification {
+  id: string;
+  user_id: string;
+  business_id: string | null;
+  offer_id: string | null;
+  title: string;
+  body: string | null;
+  image_url: string | null;
+  type: 'new_offer' | 'offer_expiring' | 'business_update';
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface OfferStats {
+  offer_id: string;
+  business_id: string | null;
+  views: number;
+  clicks: number;
+  saves: number;
+  calls: number;
+  directions: number;
+  notifications_sent: number;
+  unique_users: number;
+  conversion_rate: number;
+  updated_at: string;
 }
 
 export interface Favorite {
@@ -69,6 +168,7 @@ export const translations = {
     favorites: 'Favorite',
     profile: 'Profil',
     admin: 'Admin',
+    business: 'Business',
     search: 'Caută activități, locuri...',
     popular: 'Populare azi',
     nearby: 'În apropiere',
@@ -133,6 +233,7 @@ export const translations = {
     favorites: 'Favorites',
     profile: 'Profile',
     admin: 'Admin',
+    business: 'Business',
     search: 'Search activities, places...',
     popular: 'Popular today',
     nearby: 'Nearby',

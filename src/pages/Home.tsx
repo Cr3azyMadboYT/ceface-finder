@@ -17,6 +17,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchOffers = useCallback(async () => {
+    try { await supabase.rpc('expire_offers'); } catch { /* noop */ }
     const { data } = await supabase
       .from('offers')
       .select('*')
@@ -24,7 +25,17 @@ const Home = () => {
       .order('is_promoted', { ascending: false })
       .order('promotion_priority', { ascending: false })
       .order('created_at', { ascending: false });
-    if (data) setOffers(data);
+    if (data) {
+      const today = new Date().toISOString().split('T')[0];
+      // Show legacy offers (status null) and active not expired
+      const visible = (data as Offer[]).filter(o => {
+        const status = o.status || 'active';
+        if (!['active'].includes(status)) return false;
+        if (o.end_date && o.end_date < today) return false;
+        return true;
+      });
+      setOffers(visible);
+    }
     setLoading(false);
   }, []);
 
