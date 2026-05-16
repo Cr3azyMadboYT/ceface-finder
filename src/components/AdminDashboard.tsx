@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { translations, PushLog } from '@/types';
-import { BarChart3, TrendingUp, Eye, MousePointerClick, Megaphone, Bell } from 'lucide-react';
+import { BarChart3, Eye, MousePointerClick, Megaphone, Bell } from 'lucide-react';
 
 interface DashboardStats {
   totalUsers: number;
