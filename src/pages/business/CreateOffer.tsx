@@ -4,11 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIES, CITIES, Offer, TargetType } from '@/types';
 import { getPlan, canCreateMoreOffers } from '@/lib/plans';
-import { countActiveOffers } from '@/lib/businessApi';
-import BusinessBottomNav from '@/components/BusinessBottomNav';
+import { countActiveOffers, isBusinessApproved, isBusinessRejected } from '@/lib/businessApi';
+import BottomNav from '@/components/BottomNav';
 import OfferCard from '@/components/OfferCard';
 import UpgradeModal from '@/components/UpgradeModal';
-import { Upload, ArrowLeft, Eye, AlertCircle } from 'lucide-react';
+import { Upload, ArrowLeft, Eye, AlertCircle, ShieldAlert, Store } from 'lucide-react';
 
 const inputClass = "w-full px-3 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm";
 const labelClass = "text-xs font-medium text-muted-foreground mb-1 block";
@@ -57,7 +57,7 @@ const CreateOffer: React.FC = () => {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !business) return;
-    if (!business.is_approved && !isAdmin) {
+    if (!isBusinessApproved(business) && !isAdmin) {
       setError('Business-ul trebuie aprobat ca să publici oferte.');
       return;
     }
@@ -128,6 +128,9 @@ const CreateOffer: React.FC = () => {
     new_price: newP || null, old_price: oldP || null,
   } as unknown as Offer;
 
+  const approved = isAdmin || isBusinessApproved(business);
+  const rejected = isBusinessRejected(business);
+
   return (
     <div className="min-h-screen bg-background safe-pb">
       <div className="px-4 pt-6 pb-4 flex items-center gap-3">
@@ -137,12 +140,51 @@ const CreateOffer: React.FC = () => {
         <h1 className="text-xl font-bold font-heading text-foreground">Creează ofertă</h1>
       </div>
 
-      {business && !business.is_approved && !isAdmin && (
-        <div className="mx-4 mb-4 p-3 rounded-xl bg-accent/10 border border-accent/20 flex gap-2 text-sm">
-          <AlertCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-          <p className="text-foreground">Profilul tău este în verificare. Vei putea publica oferte după aprobare.</p>
+      {!approved ? (
+        <div className="px-4 max-w-lg mx-auto">
+          <div className="p-5 rounded-2xl card-gradient border border-border/50 space-y-3">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className={`w-5 h-5 ${rejected ? 'text-destructive' : 'text-accent'}`} />
+              <h2 className="font-semibold text-foreground">
+                {rejected ? 'Cont business respins' : 'Cont business în verificare'}
+              </h2>
+            </div>
+            {rejected ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Motiv: <span className="text-foreground">{business?.rejection_reason || '—'}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Editează profilul și retrimite-l spre verificare.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Poți completa profilul afacerii tale, dar vei putea publica oferte doar după ce contul tău este aprobat de admin.
+              </p>
+            )}
+            <div className="flex flex-col gap-2 pt-1">
+              <button onClick={() => navigate('/business/profile')}
+                className="w-full py-3 rounded-xl bg-gradient-primary text-primary-foreground font-semibold shadow-neon flex items-center justify-center gap-2">
+                <Store className="w-4 h-4" /> Completează profilul
+              </button>
+              <button onClick={() => navigate('/business')}
+                className="w-full py-3 rounded-xl border border-border text-foreground font-medium">
+                Vezi status verificare
+              </button>
+            </div>
+          </div>
+          <div className="h-20" />
+          <BottomNav />
         </div>
-      )}
+      ) : (
+        <>
+        {business && !business.is_approved && (
+          <div className="mx-4 mb-4 p-3 rounded-xl bg-accent/10 border border-accent/20 flex gap-2 text-sm">
+            <AlertCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+            <p className="text-foreground">Profilul tău este în verificare. Vei putea publica oferte după aprobare.</p>
+          </div>
+        )}
 
       {preview ? (
         <div className="px-4 max-w-lg mx-auto space-y-4">
@@ -243,7 +285,9 @@ const CreateOffer: React.FC = () => {
 
       <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)}
         message={`Plan ${getPlan(business?.subscription_plan).name}: ai atins limita de oferte active.`} />
-      <BusinessBottomNav />
+      <BottomNav />
+        </>
+      )}
     </div>
   );
 };
