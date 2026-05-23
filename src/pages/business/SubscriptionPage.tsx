@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getPlan } from '@/lib/plans';
 import { countActiveOffers } from '@/lib/businessApi';
-import BusinessBottomNav from '@/components/BusinessBottomNav';
+import BottomNav from '@/components/BottomNav';
 import { ArrowLeft, Crown, RefreshCw } from 'lucide-react';
 
 const SubscriptionPage: React.FC = () => {
@@ -18,7 +18,7 @@ const SubscriptionPage: React.FC = () => {
   if (!business) return (
     <div className="min-h-screen bg-background safe-pb px-4 pt-8 text-center text-muted-foreground">
       Completează profilul business mai întâi.
-      <BusinessBottomNav />
+      <BottomNav />
     </div>
   );
 
@@ -60,7 +60,7 @@ const SubscriptionPage: React.FC = () => {
         <div className="h-20" />
       </div>
 
-      <BusinessBottomNav />
+      <BottomNav />
     </div>
   );
 };

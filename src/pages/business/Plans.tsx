@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PLANS, getPlan } from '@/lib/plans';
 import { requestPlanChange } from '@/lib/businessApi';
-import BusinessBottomNav from '@/components/BusinessBottomNav';
+import BottomNav from '@/components/BottomNav';
 import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 
 const Plans: React.FC = () => {
@@ -85,7 +85,7 @@ const Plans: React.FC = () => {
         <div className="h-20" />
       </div>
 
-      <BusinessBottomNav />
+      <BottomNav />
     </div>
   );
 };

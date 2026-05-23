@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Offer, OfferStatus } from '@/types';
-import BusinessBottomNav from '@/components/BusinessBottomNav';
+import BottomNav from '@/components/BottomNav';
 import OfferCard from '@/components/OfferCard';
 import { ArrowLeft, BarChart3, Pencil, EyeOff } from 'lucide-react';
 
@@ -44,7 +44,7 @@ const MyOffers: React.FC = () => {
     return (
       <div className="min-h-screen bg-background safe-pb px-4 pt-8 text-center">
         <p className="text-muted-foreground">Completează profilul business mai întâi.</p>
-        <BusinessBottomNav />
+        <BottomNav />
       </div>
     );
   }
@@ -103,7 +103,7 @@ const MyOffers: React.FC = () => {
         <div className="h-20" />
       </div>
 
-      <BusinessBottomNav />
+      <BottomNav />
     </div>
   );
 };
