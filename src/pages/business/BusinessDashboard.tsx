@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import BusinessBottomNav from '@/components/BusinessBottomNav';
-import { getBusinessAggregateStats } from '@/lib/businessApi';
+import BottomNav from '@/components/BottomNav';
+import { getBusinessAggregateStats, isBusinessApproved, isBusinessRejected, resubmitBusiness } from '@/lib/businessApi';
 import { getPlan } from '@/lib/plans';
-import { Eye, MousePointerClick, Users, Bell, TrendingUp, Plus, List, BarChart3, Store, Crown, AlertCircle } from 'lucide-react';
+import { Eye, MousePointerClick, Users, Bell, TrendingUp, Plus, List, BarChart3, Store, Crown, AlertCircle, ShieldAlert, RefreshCw, Home as HomeIcon } from 'lucide-react';
 
 const BusinessDashboard: React.FC = () => {
   const { user, business, refreshBusiness } = useAuth();
@@ -43,7 +43,7 @@ const BusinessDashboard: React.FC = () => {
             Completează profil business
           </button>
         </div>
-        <BusinessBottomNav />
+        <BottomNav />
       </div>
     );
   }
@@ -74,10 +74,39 @@ const BusinessDashboard: React.FC = () => {
         </div>
       </div>
 
-      {!business.is_approved && (
-        <div className="mx-4 mb-4 p-3 rounded-xl bg-accent/10 border border-accent/20 flex gap-2 text-sm">
-          <AlertCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-          <p className="text-foreground">Profilul tău este în verificare. Vei putea publica oferte după aprobare.</p>
+      {isBusinessRejected(business) ? (
+        <div className="mx-4 mb-4 p-4 rounded-2xl card-gradient border border-destructive/30 space-y-3">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-destructive" />
+            <h2 className="font-semibold text-foreground">Cont business respins</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Motiv: <span className="text-foreground">{business.rejection_reason || '—'}</span>
+          </p>
+          <div className="flex flex-col gap-2">
+            <button onClick={() => navigate('/business/profile')}
+              className="w-full py-2.5 rounded-xl bg-gradient-primary text-primary-foreground font-semibold shadow-neon">
+              Editează profilul
+            </button>
+            <button onClick={async () => { await resubmitBusiness(business.id); await refreshBusiness(); }}
+              className="w-full py-2.5 rounded-xl border border-border text-foreground font-medium flex items-center justify-center gap-2">
+              <RefreshCw className="w-4 h-4" /> Retrimite spre verificare
+            </button>
+          </div>
+        </div>
+      ) : !isBusinessApproved(business) && (
+        <div className="mx-4 mb-4 p-4 rounded-2xl card-gradient border border-accent/30 space-y-2">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-accent" />
+            <h2 className="font-semibold text-foreground">Cont în verificare</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Completează profilul pentru a putea fi aprobat. Vei putea publica oferte după aprobare.
+          </p>
+          <button onClick={() => navigate('/business/profile')}
+            className="w-full py-2.5 rounded-xl bg-gradient-primary text-primary-foreground font-semibold shadow-neon">
+            Completează profilul
+          </button>
         </div>
       )}
 
@@ -105,17 +134,20 @@ const BusinessDashboard: React.FC = () => {
           <Link to="/business/stats" className="flex items-center justify-center gap-2 py-3 rounded-xl card-gradient border border-border/50 text-foreground font-medium">
             <BarChart3 className="w-4 h-4" /> Statistici
           </Link>
+          <Link to="/" className="flex items-center justify-center gap-2 py-3 rounded-xl card-gradient border border-border/50 text-foreground font-medium">
+            <HomeIcon className="w-4 h-4" /> Vezi feed clienți
+          </Link>
           <Link to="/business/profile" className="flex items-center justify-center gap-2 py-3 rounded-xl card-gradient border border-border/50 text-foreground font-medium">
             <Store className="w-4 h-4" /> Profil
           </Link>
-          <Link to="/business/subscription" className="flex items-center justify-center gap-2 py-3 rounded-xl card-gradient border border-border/50 text-foreground font-medium">
+          <Link to="/business/subscription" className="col-span-2 flex items-center justify-center gap-2 py-3 rounded-xl card-gradient border border-border/50 text-foreground font-medium">
             <Crown className="w-4 h-4" /> Abonament
           </Link>
         </div>
       </div>
 
       <div className="h-20" />
-      <BusinessBottomNav />
+      <BottomNav />
     </div>
   );
 };

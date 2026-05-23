@@ -64,3 +64,43 @@ export const requestPlanChange = async (businessId: string, plan: string, price:
   }
   return data as Subscription;
 };
+
+export const approveBusiness = async (businessId: string, adminId: string) => {
+  await supabase.from('businesses').update({
+    is_approved: true,
+    moderation_status: 'approved',
+    rejection_reason: null,
+    reviewed_at: new Date().toISOString(),
+    reviewed_by: adminId,
+  }).eq('id', businessId);
+};
+
+export const rejectBusiness = async (businessId: string, adminId: string, reason: string) => {
+  await supabase.from('businesses').update({
+    is_approved: false,
+    moderation_status: 'rejected',
+    rejection_reason: reason || 'Respins de admin',
+    reviewed_at: new Date().toISOString(),
+    reviewed_by: adminId,
+  }).eq('id', businessId);
+};
+
+export const resubmitBusiness = async (businessId: string) => {
+  await supabase.from('businesses').update({
+    moderation_status: 'pending',
+    is_approved: false,
+    rejection_reason: null,
+    reviewed_at: null,
+    reviewed_by: null,
+  }).eq('id', businessId);
+};
+
+export const setBusinessVerified = async (businessId: string, value: boolean) => {
+  await supabase.from('businesses').update({ is_verified: value }).eq('id', businessId);
+};
+
+export const isBusinessApproved = (b: { is_approved?: boolean; moderation_status?: string | null } | null | undefined) =>
+  !!b && b.is_approved === true && (b.moderation_status ?? 'approved') === 'approved';
+
+export const isBusinessRejected = (b: { moderation_status?: string | null } | null | undefined) =>
+  !!b && b.moderation_status === 'rejected';

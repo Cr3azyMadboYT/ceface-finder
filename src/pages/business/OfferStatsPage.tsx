@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Offer, OfferStats } from '@/types';
 import { getBusinessAggregateStats, getOfferStats } from '@/lib/businessApi';
-import BusinessBottomNav from '@/components/BusinessBottomNav';
+import BottomNav from '@/components/BottomNav';
 import { ArrowLeft, Eye, MousePointerClick, Bookmark, Phone, Navigation, Bell, Users, TrendingUp } from 'lucide-react';
 
 const StatBar: React.FC<{ label: string; value: number | string; icon: React.ComponentType<{ className?: string }> }> = ({ label, value, icon: Icon }) => (
@@ -74,7 +74,7 @@ const OfferStatsPage: React.FC = () => {
         <StatsView stats={stats || agg} />
         <div className="h-20" />
       </div>
-      <BusinessBottomNav />
+      <BottomNav />
     </div>
   );
 };

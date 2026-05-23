@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { upsertMyBusiness } from '@/lib/businessApi';
+import { upsertMyBusiness, resubmitBusiness, isBusinessRejected, isBusinessApproved } from '@/lib/businessApi';
 import { CATEGORIES, CITIES } from '@/types';
-import BusinessBottomNav from '@/components/BusinessBottomNav';
-import { Upload, ArrowLeft, AlertCircle } from 'lucide-react';
+import BottomNav from '@/components/BottomNav';
+import { Upload, ArrowLeft, AlertCircle, ShieldAlert, CheckCircle2, RefreshCw } from 'lucide-react';
 
 const inputClass = "w-full px-3 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm";
 const labelClass = "text-xs font-medium text-muted-foreground mb-1 block";
@@ -71,6 +71,15 @@ const BusinessProfile: React.FC = () => {
     setSaving(false);
   };
 
+  const rejected = isBusinessRejected(business);
+  const approved = isBusinessApproved(business);
+
+  const handleResubmit = async () => {
+    if (!business) return;
+    await resubmitBusiness(business.id);
+    await refreshBusiness();
+  };
+
   return (
     <div className="min-h-screen bg-background safe-pb">
       <div className="px-4 pt-6 pb-4 flex items-center gap-3">
@@ -80,10 +89,33 @@ const BusinessProfile: React.FC = () => {
         <h1 className="text-xl font-bold font-heading text-foreground">Profil business</h1>
       </div>
 
-      {business && !business.is_approved && (
+      {business && rejected && (
+        <div className="mx-4 mb-4 p-4 rounded-2xl card-gradient border border-destructive/30 space-y-3">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-destructive" />
+            <h2 className="font-semibold text-foreground">Cont business respins</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Motiv: <span className="text-foreground">{business.rejection_reason || '—'}</span>
+          </p>
+          <button onClick={handleResubmit}
+            className="w-full py-2.5 rounded-xl bg-gradient-primary text-primary-foreground font-semibold shadow-neon flex items-center justify-center gap-2">
+            <RefreshCw className="w-4 h-4" /> Retrimite spre verificare
+          </button>
+        </div>
+      )}
+
+      {business && !rejected && !approved && (
         <div className="mx-4 mb-4 p-3 rounded-xl bg-accent/10 border border-accent/20 flex gap-2 text-sm">
           <AlertCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
           <p className="text-foreground">Profilul tău este în verificare. Vei putea publica oferte după aprobare.</p>
+        </div>
+      )}
+
+      {business && approved && (
+        <div className="mx-4 mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20 flex gap-2 text-sm">
+          <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+          <p className="text-foreground">Cont aprobat. Poți publica oferte.</p>
         </div>
       )}
 
@@ -155,7 +187,7 @@ const BusinessProfile: React.FC = () => {
         <div className="h-20" />
       </form>
 
-      <BusinessBottomNav />
+      <BottomNav />
     </div>
   );
 };
