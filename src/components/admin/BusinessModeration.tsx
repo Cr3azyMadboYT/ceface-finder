@@ -6,7 +6,7 @@ import {
   approveBusiness, rejectBusiness, setBusinessVerified, isBusinessApproved, isBusinessRejected,
 } from '@/lib/businessApi';
 import {
-  Check, X, ShieldCheck, ChevronDown, ChevronUp, Mail, Phone, MapPin, Globe, Calendar,
+  Check, X, ShieldCheck, ChevronDown, ChevronUp,
   Building2, User as UserIcon,
 } from 'lucide-react';
 
