@@ -58,6 +58,8 @@ export interface Offer {
   terms?: string | null;
 }
 
+export type ModerationStatus = 'pending' | 'approved' | 'rejected';
+
 export interface Business {
   id: string;
   owner_id: string;
@@ -82,6 +84,9 @@ export interface Business {
   subscription_status: 'active' | 'expired' | 'cancelled' | 'pending';
   subscription_expires_at: string | null;
   rejection_reason: string | null;
+  moderation_status?: ModerationStatus | null;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
   created_at: string;
   updated_at: string;
 }
