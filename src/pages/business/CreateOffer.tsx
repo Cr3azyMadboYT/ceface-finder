@@ -58,10 +58,13 @@ const CreateOffer: React.FC = () => {
       if (oldP <= newP) return 'Prețul vechi trebuie să fie mai mare decât cel nou';
     }
     if (form.offer_type === 'limited_offer' && !form.end_date) {
-      return 'Pentru o ofertă cu reducere/limitată trebuie să selectezi data de expirare';
+      return 'Pentru o ofertă limitată trebuie să selectezi data de expirare';
     }
     if (form.start_date && form.end_date && form.end_date < form.start_date) {
       return 'Data expirării trebuie să fie după data de început';
+    }
+    if (form.start_date && form.end_date && form.start_date === form.end_date && form.start_time && form.end_time && form.end_time <= form.start_time) {
+      return 'Ora de final trebuie să fie după ora de început';
     }
     return null;
   };
