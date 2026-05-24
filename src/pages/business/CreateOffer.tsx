@@ -286,6 +286,12 @@ const CreateOffer: React.FC = () => {
             <div><label className={labelClass}>Data expirare {form.offer_type === 'limited_offer' && '*'}</label>
               <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} className={inputClass} /></div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelClass}>Oră început</label>
+              <input type="time" value={form.start_time} onChange={e => setForm({ ...form, start_time: e.target.value })} className={inputClass} /></div>
+            <div><label className={labelClass}>Oră finalizare</label>
+              <input type="time" value={form.end_time} onChange={e => setForm({ ...form, end_time: e.target.value })} className={inputClass} /></div>
+          </div>
 
           <div>
             <label className={labelClass}>Public țintă</label>
