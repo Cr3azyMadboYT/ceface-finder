@@ -1,0 +1,3 @@
+ALTER TABLE public.offers
+ADD COLUMN IF NOT EXISTS start_time text,
+ADD COLUMN IF NOT EXISTS end_time text;
