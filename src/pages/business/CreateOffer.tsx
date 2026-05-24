@@ -23,6 +23,7 @@ const CreateOffer: React.FC = () => {
     offer_type: 'event' as OfferType,
     category: CATEGORIES[0] as string, city: (business?.city || CITIES[0]) as string,
     zone: business?.zone || '', start_date: '', end_date: '',
+    start_time: '', end_time: '',
     image_url: '', terms: '',
     target_type: 'all' as TargetType,
     target_city: '', target_zone: '',
@@ -57,10 +58,13 @@ const CreateOffer: React.FC = () => {
       if (oldP <= newP) return 'Prețul vechi trebuie să fie mai mare decât cel nou';
     }
     if (form.offer_type === 'limited_offer' && !form.end_date) {
-      return 'Pentru o ofertă cu reducere/limitată trebuie să selectezi data de expirare';
+      return 'Pentru o ofertă limitată trebuie să selectezi data de expirare';
     }
     if (form.start_date && form.end_date && form.end_date < form.start_date) {
       return 'Data expirării trebuie să fie după data de început';
+    }
+    if (form.start_date && form.end_date && form.start_date === form.end_date && form.start_time && form.end_time && form.end_time <= form.start_time) {
+      return 'Ora de final trebuie să fie după ora de început';
     }
     return null;
   };
@@ -97,7 +101,7 @@ const CreateOffer: React.FC = () => {
       title: form.title, description: form.description,
       category: form.category, city: form.city, area: form.zone,
       location: business?.address || '', location_url: '',
-      date: form.start_date || '', time: '',
+      date: form.start_date || '', time: form.start_time || '',
       image_url, contact_link: business?.website || '', phone: business?.phone || '',
       is_active: true,
       offer_type: form.offer_type,
@@ -108,6 +112,8 @@ const CreateOffer: React.FC = () => {
       discount_percent: form.has_discount ? (discount || null) : null,
       start_date: form.start_date || null,
       end_date: form.end_date || null,
+      start_time: form.start_time || null,
+      end_time: form.end_time || null,
       target_type: form.target_type,
       target_city: form.target_type === 'city' ? (form.target_city || form.city) : null,
       target_zone: form.target_type === 'zone' ? (form.target_zone || form.zone) : null,
@@ -133,7 +139,7 @@ const CreateOffer: React.FC = () => {
     id: 'preview', title: form.title || 'Titlu ofertă',
     description: form.description, category: form.category,
     city: form.city, area: form.zone, location: business?.address || '',
-    location_url: '', date: form.start_date, time: '',
+    location_url: '', date: form.start_date, time: `${form.start_time || ''}${form.end_time ? ' - ' + form.end_time : ''}`,
     image_url: imageFile ? URL.createObjectURL(imageFile) : form.image_url,
     contact_link: '', phone: '', is_active: true,
     created_by: user?.id || '', created_at: new Date().toISOString(),
@@ -279,6 +285,12 @@ const CreateOffer: React.FC = () => {
               <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className={inputClass} /></div>
             <div><label className={labelClass}>Data expirare {form.offer_type === 'limited_offer' && '*'}</label>
               <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} className={inputClass} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelClass}>Oră început</label>
+              <input type="time" value={form.start_time} onChange={e => setForm({ ...form, start_time: e.target.value })} className={inputClass} /></div>
+            <div><label className={labelClass}>Oră finalizare</label>
+              <input type="time" value={form.end_time} onChange={e => setForm({ ...form, end_time: e.target.value })} className={inputClass} /></div>
           </div>
 
           <div>
