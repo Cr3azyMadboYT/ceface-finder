@@ -23,6 +23,7 @@ const CreateOffer: React.FC = () => {
     offer_type: 'event' as OfferType,
     category: CATEGORIES[0] as string, city: (business?.city || CITIES[0]) as string,
     zone: business?.zone || '', start_date: '', end_date: '',
+    start_time: '', end_time: '',
     image_url: '', terms: '',
     target_type: 'all' as TargetType,
     target_city: '', target_zone: '',
