@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { CATEGORIES, CITIES, Offer, TargetType } from '@/types';
+import { CATEGORIES, CITIES, Offer, TargetType, OfferType } from '@/types';
 import { getPlan, canCreateMoreOffers } from '@/lib/plans';
 import { countActiveOffers, isBusinessApproved, isBusinessRejected } from '@/lib/businessApi';
 import BottomNav from '@/components/BottomNav';
 import OfferCard from '@/components/OfferCard';
 import UpgradeModal from '@/components/UpgradeModal';
-import { Upload, ArrowLeft, Eye, AlertCircle, ShieldAlert, Store } from 'lucide-react';
+import { Upload, ArrowLeft, Eye, AlertCircle, ShieldAlert, Store, CheckCircle2 } from 'lucide-react';
 
 const inputClass = "w-full px-3 py-2.5 rounded-xl bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm";
 const labelClass = "text-xs font-medium text-muted-foreground mb-1 block";
@@ -17,7 +17,10 @@ const CreateOffer: React.FC = () => {
   const { user, business, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    title: '', description: '', old_price: '', new_price: '',
+    title: '', description: '',
+    has_discount: false,
+    old_price: '', new_price: '',
+    offer_type: 'event' as OfferType,
     category: CATEGORIES[0] as string, city: (business?.city || CITIES[0]) as string,
     zone: business?.zone || '', start_date: '', end_date: '',
     image_url: '', terms: '',
@@ -34,8 +37,8 @@ const CreateOffer: React.FC = () => {
     if (business) setForm(f => ({ ...f, city: business.city || f.city, zone: business.zone || f.zone }));
   }, [business]);
 
-  const oldP = parseFloat(form.old_price) || 0;
-  const newP = parseFloat(form.new_price) || 0;
+  const oldP = form.has_discount ? (parseFloat(form.old_price) || 0) : 0;
+  const newP = form.has_discount ? (parseFloat(form.new_price) || 0) : 0;
   const discount = oldP > 0 && newP > 0 && oldP > newP ? Math.round(((oldP - newP) / oldP) * 100) : 0;
 
   const upload = async (file: File): Promise<string | null> => {
@@ -49,29 +52,39 @@ const CreateOffer: React.FC = () => {
   const validate = (): string | null => {
     if (!form.title) return 'Titlul este obligatoriu';
     if (!form.description) return 'Descrierea este obligatorie';
-    if (oldP > 0 && newP > 0 && oldP <= newP) return 'Prețul vechi trebuie să fie mai mare decât cel nou';
-    if (form.start_date && form.end_date && form.end_date < form.start_date) return 'Data expirării trebuie să fie după data de început';
+    if (form.has_discount) {
+      if (oldP <= 0 || newP <= 0) return 'Completează prețul vechi și prețul nou';
+      if (oldP <= newP) return 'Prețul vechi trebuie să fie mai mare decât cel nou';
+    }
+    if (form.offer_type === 'limited_offer' && !form.end_date) {
+      return 'Pentru o ofertă cu reducere/limitată trebuie să selectezi data de expirare';
+    }
+    if (form.start_date && form.end_date && form.end_date < form.start_date) {
+      return 'Data expirării trebuie să fie după data de început';
+    }
     return null;
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !business) return;
-    if (!isBusinessApproved(business) && !isAdmin) {
+  const submit = async () => {
+    setError('');
+    if (!user) { setError('Trebuie să fii autentificat.'); return; }
+    if (!business && !isAdmin) { setError('Nu s-a găsit profilul de business.'); return; }
+    if (business && !isBusinessApproved(business) && !isAdmin) {
       setError('Business-ul trebuie aprobat ca să publici oferte.');
       return;
     }
     const v = validate();
     if (v) { setError(v); return; }
 
-    // plan limit check
-    const active = await countActiveOffers(business.id);
-    if (!canCreateMoreOffers(business.subscription_plan, active)) {
-      setShowUpgrade(true);
-      return;
+    if (business) {
+      const active = await countActiveOffers(business.id);
+      if (!canCreateMoreOffers(business.subscription_plan, active)) {
+        setShowUpgrade(true);
+        return;
+      }
     }
 
-    setError(''); setSaving(true);
+    setSaving(true);
     let image_url = form.image_url;
     if (imageFile) {
       const u = await upload(imageFile);
@@ -79,37 +92,41 @@ const CreateOffer: React.FC = () => {
       else { setSaving(false); return; }
     }
 
+    const approvedNow = isAdmin || (business && isBusinessApproved(business));
     const payload = {
       title: form.title, description: form.description,
       category: form.category, city: form.city, area: form.zone,
-      location: business.address || '', location_url: '',
+      location: business?.address || '', location_url: '',
       date: form.start_date || '', time: '',
-      image_url, contact_link: business.website || '', phone: business.phone || '',
+      image_url, contact_link: business?.website || '', phone: business?.phone || '',
       is_active: true,
-      offer_type: 'limited_offer',
-      business_id: business.id,
+      offer_type: form.offer_type,
+      business_id: business?.id || null,
       created_by: user.id,
-      old_price: oldP || null, new_price: newP || null,
-      discount_percent: discount || null,
-      start_date: form.start_date || null, end_date: form.end_date || null,
+      old_price: form.has_discount ? (oldP || null) : null,
+      new_price: form.has_discount ? (newP || null) : null,
+      discount_percent: form.has_discount ? (discount || null) : null,
+      start_date: form.start_date || null,
+      end_date: form.end_date || null,
       target_type: form.target_type,
       target_city: form.target_type === 'city' ? (form.target_city || form.city) : null,
       target_zone: form.target_type === 'zone' ? (form.target_zone || form.zone) : null,
       terms: form.terms || null,
-      status: isAdmin ? 'active' : 'pending',
+      status: approvedNow ? 'active' : 'pending',
     };
     const { error: err, data } = await supabase.from('offers').insert(payload).select('*').maybeSingle();
-    setSaving(false);
-    if (err) { setError(err.message); return; }
+    if (err) { setSaving(false); setError(err.message); return; }
 
-    // If admin published directly → dispatch notifications now
-    if (isAdmin && data) {
+    if (approvedNow && data) {
       try {
         const { dispatchOfferNotifications } = await import('@/lib/notifications');
         await dispatchOfferNotifications(data as Offer, business);
       } catch { /* noop */ }
     }
-    navigate('/business/offers');
+    setSaving(false);
+    navigate('/business/offers', {
+      state: { flash: approvedNow ? 'Ofertă publicată și notificare trimisă.' : 'Ofertă trimisă spre aprobare.' },
+    });
   };
 
   const previewOffer: Offer = {
@@ -120,16 +137,18 @@ const CreateOffer: React.FC = () => {
     image_url: imageFile ? URL.createObjectURL(imageFile) : form.image_url,
     contact_link: '', phone: '', is_active: true,
     created_by: user?.id || '', created_at: new Date().toISOString(),
-    offer_type: 'limited_offer',
+    offer_type: form.offer_type,
     is_promoted: false, promotion_starts_at: null, promotion_expires_at: null,
     promotion_priority: 0, promotion_push_sent: false,
     end_date: form.end_date || null,
-    discount_percent: discount || null,
-    new_price: newP || null, old_price: oldP || null,
+    discount_percent: form.has_discount ? (discount || null) : null,
+    new_price: form.has_discount ? (newP || null) : null,
+    old_price: form.has_discount ? (oldP || null) : null,
   } as unknown as Offer;
 
   const approved = isAdmin || isBusinessApproved(business);
   const rejected = isBusinessRejected(business);
+  const plan = getPlan(business?.subscription_plan);
 
   return (
     <div className="min-h-screen bg-background safe-pb">
@@ -179,10 +198,11 @@ const CreateOffer: React.FC = () => {
         </div>
       ) : (
         <>
-        {business && !business.is_approved && (
-          <div className="mx-4 mb-4 p-3 rounded-xl bg-accent/10 border border-accent/20 flex gap-2 text-sm">
-            <AlertCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-            <p className="text-foreground">Profilul tău este în verificare. Vei putea publica oferte după aprobare.</p>
+        {business && (
+          <div className="mx-4 mb-3 p-3 rounded-xl bg-card border border-border/50 text-xs text-muted-foreground flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-primary" />
+            Plan <span className="text-foreground font-medium">{plan.name}</span> · limită oferte active:{' '}
+            <span className="text-foreground font-medium">{plan.maxActiveOffers === -1 ? 'nelimitat' : plan.maxActiveOffers}</span>
           </div>
         )}
 
@@ -190,13 +210,15 @@ const CreateOffer: React.FC = () => {
         <div className="px-4 max-w-lg mx-auto space-y-4">
           <p className="text-sm text-muted-foreground">Preview ofertă:</p>
           <OfferCard offer={previewOffer} />
+          {error && <p className="text-destructive text-sm">{error}</p>}
           <div className="flex gap-2">
-            <button onClick={() => setPreview(false)} className="flex-1 py-3 rounded-xl border border-border text-foreground font-medium">Înapoi</button>
+            <button onClick={() => { setError(''); setPreview(false); }} className="flex-1 py-3 rounded-xl border border-border text-foreground font-medium">Înapoi</button>
             <button onClick={submit} disabled={saving}
               className="flex-1 py-3 rounded-xl bg-gradient-primary text-primary-foreground font-semibold shadow-neon disabled:opacity-50">
-              {saving ? '...' : 'Publică și trimite notificarea'}
+              {saving ? '...' : (approved ? 'Publică și trimite notificarea' : 'Trimite spre aprobare')}
             </button>
           </div>
+          <div className="h-20" />
         </div>
       ) : (
         <form onSubmit={e => { e.preventDefault(); const v = validate(); if (v) setError(v); else { setError(''); setPreview(true); } }}
@@ -206,14 +228,37 @@ const CreateOffer: React.FC = () => {
           <div><label className={labelClass}>Descriere *</label>
             <textarea required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className={`${inputClass} min-h-[80px] resize-none`} /></div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div><label className={labelClass}>Preț vechi</label>
-              <input type="number" step="0.01" value={form.old_price} onChange={e => setForm({ ...form, old_price: e.target.value })} className={inputClass} /></div>
-            <div><label className={labelClass}>Preț nou</label>
-              <input type="number" step="0.01" value={form.new_price} onChange={e => setForm({ ...form, new_price: e.target.value })} className={inputClass} /></div>
-            <div><label className={labelClass}>Reducere</label>
-              <div className={`${inputClass} flex items-center font-bold text-primary`}>{discount}%</div></div>
+          <div>
+            <label className={labelClass}>Tip ofertă</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setForm({ ...form, offer_type: 'event' })}
+                className={`py-2.5 rounded-xl border text-sm font-medium ${form.offer_type === 'event' ? 'bg-gradient-primary text-primary-foreground border-transparent shadow-neon' : 'border-border text-foreground bg-card'}`}>
+                Eveniment
+              </button>
+              <button type="button" onClick={() => setForm({ ...form, offer_type: 'limited_offer' })}
+                className={`py-2.5 rounded-xl border text-sm font-medium ${form.offer_type === 'limited_offer' ? 'bg-gradient-primary text-primary-foreground border-transparent shadow-neon' : 'border-border text-foreground bg-card'}`}>
+                Ofertă limitată
+              </button>
+            </div>
           </div>
+
+          <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-card border border-border/50">
+            <input type="checkbox" checked={form.has_discount}
+              onChange={e => setForm({ ...form, has_discount: e.target.checked })}
+              className="w-4 h-4 rounded accent-primary" />
+            <span className="text-sm text-foreground font-medium">Această ofertă include o reducere de preț</span>
+          </label>
+
+          {form.has_discount && (
+            <div className="grid grid-cols-3 gap-3">
+              <div><label className={labelClass}>Preț vechi *</label>
+                <input type="number" step="0.01" value={form.old_price} onChange={e => setForm({ ...form, old_price: e.target.value })} className={inputClass} /></div>
+              <div><label className={labelClass}>Preț nou *</label>
+                <input type="number" step="0.01" value={form.new_price} onChange={e => setForm({ ...form, new_price: e.target.value })} className={inputClass} /></div>
+              <div><label className={labelClass}>Reducere</label>
+                <div className={`${inputClass} flex items-center font-bold text-primary`}>{discount}%</div></div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div><label className={labelClass}>Categorie</label>
@@ -232,7 +277,7 @@ const CreateOffer: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <div><label className={labelClass}>Data început</label>
               <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className={inputClass} /></div>
-            <div><label className={labelClass}>Data expirare</label>
+            <div><label className={labelClass}>Data expirare {form.offer_type === 'limited_offer' && '*'}</label>
               <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} className={inputClass} /></div>
           </div>
 
@@ -284,7 +329,7 @@ const CreateOffer: React.FC = () => {
       )}
 
       <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)}
-        message={`Plan ${getPlan(business?.subscription_plan).name}: ai atins limita de oferte active.`} />
+        message={`Plan ${plan.name}: ai atins limita de ${plan.maxActiveOffers} oferte active. Fă upgrade ca să publici mai multe.`} />
       <BottomNav />
         </>
       )}
