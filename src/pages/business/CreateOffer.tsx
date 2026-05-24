@@ -139,7 +139,7 @@ const CreateOffer: React.FC = () => {
     id: 'preview', title: form.title || 'Titlu ofertă',
     description: form.description, category: form.category,
     city: form.city, area: form.zone, location: business?.address || '',
-    location_url: '', date: form.start_date, time: '',
+    location_url: '', date: form.start_date, time: `${form.start_time || ''}${form.end_time ? ' - ' + form.end_time : ''}`,
     image_url: imageFile ? URL.createObjectURL(imageFile) : form.image_url,
     contact_link: '', phone: '', is_active: true,
     created_by: user?.id || '', created_at: new Date().toISOString(),
